@@ -16,7 +16,6 @@ Features:
 - Works when online, a notice is shown when offline (with a state-machine to track state).
 - Opens external links in the system web browser, internal links in the app.
 - Website can indicate which links to open in the app.
-- Allows scanning a barcode, initiated from the website.
 - Works on Android and iOS.
 
 ## Build

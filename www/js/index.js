@@ -176,11 +176,7 @@ var Fsm = machina.Fsm.extend({
   },
 
   onNavigate: function(e, cb) {
-    if (e.url.match(/^app:\/\/mobile-scan\b/)) {
-      // barcode scanner opened
-      var params = parseQueryString(e.url) || {};
-      this.openScan(params.ret, !!params.redirect);
-    } else if (this.isLocalUrl(e.url)) {
+    if (this.isLocalUrl(e.url)) {
       // don't interfere with local urls
       debug("internal link: " + e.url);
       this.appLastUrl = e.url;
@@ -246,54 +242,6 @@ var Fsm = machina.Fsm.extend({
     }, function(errMsg) {
       debug("could not open external link: " + errMsg);
     });
-  },
-
-  openScan: function(returnUrlTemplate) {
-    debug("openScan: " + returnUrlTemplate);
-    cordova.plugins.barcodeScanner.scan(
-      function(result) {
-        if (result.cancelled) {
-          debug("scan cancelled");
-          // necessary on iOS, see below
-          if (window.cordova.platformId === 'ios') this.showMessage(null);
-        } else {
-          debug("scan result: " + result.text);
-          this.openScanUrl(returnUrlTemplate, result.text);
-        }
-      }.bind(this),
-      function(error) {
-        debug("scan failed: " + error);
-        alert("Scan failed: " + error);
-        // necessary on iOS, see below
-        if (window.cordova.platformId === 'ios') this.showMessage(null);
-      }.bind(this),
-      {
-        saveHistory: true,
-        resultDisplayDuration: 500,
-        formats: "UPC_A,UPC_E,EAN_8,EAN_13",
-        disableSuccessBeep: true
-      }
-    );
-    // necessary on iOS, see https://github.com/phonegap/phonegap-plugin-barcodescanner/issues/570
-    if (window.cordova.platformId === 'ios') this.showMessage("scanning");
-  },
-
-  openScanUrl: function(returnUrlTemplate, barcode) {
-    if (!returnUrlTemplate) {
-      debug("scan: missing query parameter for the return url, please in include 'ret'");
-      alert("Scan failed (return url missing)");
-      return false;
-    }
-    if (!returnUrlTemplate.includes('{CODE}')) {
-      debug("scan: {CODE} missing in the return parameter")
-      alert("Scan failed (code missing in return url)");
-      return false;
-    }
-    // Be a bit safer and only keep numbers (XSS risk).
-    var safeBarcode = barcode.replace(/[^\d]/g, '');
-    var url = returnUrlTemplate.replace('{CODE}', safeBarcode);
-    this.load(url, "finding");
-    return true;
   },
 
   // Show message.
